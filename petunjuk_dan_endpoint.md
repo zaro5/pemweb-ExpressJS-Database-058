@@ -49,6 +49,8 @@ Buka browser pada alamat `http://localhost:5555`.
 
 Setiap endpoint telah diuji dengan berbagai skenario (sukses, validasi error 400, not found 404).
 
+Validasi input: `name` harus berupa string yang tidak kosong, `price` harus berupa bilangan bulat dari 0 sampai 2147483647, dan ID harus berupa bilangan bulat positif. Input yang tidak valid akan menghasilkan `400 Bad Request`.
+
 ### 1. GET /products (Menampilkan Seluruh Data)
 * **Method**: `GET`
 * **URL**: `http://localhost:3000/products`

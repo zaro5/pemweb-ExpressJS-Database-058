@@ -7,6 +7,56 @@ const PORT = 3000;
 
 app.use(express.json());
 
+function parseProductId(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return null;
+  }
+
+  if (typeof value === 'string' && !/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 && id <= 2147483647 ? id : null;
+}
+
+function validateProductInput(body = {}) {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return {
+      error: 'Nama dan harga produk harus diisi'
+    };
+  }
+
+  const { name, price } = body;
+
+  if (
+    typeof name !== 'string' ||
+    name.trim() === '' ||
+    price === undefined ||
+    price === null ||
+    price === '' ||
+    (typeof price === 'string' && price.trim() === '')
+  ) {
+    return {
+      error: 'Nama dan harga produk harus diisi'
+    };
+  }
+
+  const parsedPrice = Number(price);
+  if (!Number.isSafeInteger(parsedPrice) || parsedPrice < 0 || parsedPrice > 2147483647) {
+    return {
+      error: 'Harga produk harus berupa angka valid dan minimal 0'
+    };
+  }
+
+  return {
+    data: {
+      name: name.trim(),
+      price: parsedPrice
+    }
+  };
+}
+
 // 1. GET /products: Menampilkan seluruh data
 app.get('/products', async (req, res) => {
   try {
@@ -31,9 +81,8 @@ app.get('/products', async (req, res) => {
 // 2. GET /products/:id: Menampilkan data produk berdasarkan ID
 app.get('/products/:id', async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-
-    if (isNaN(id)) {
+    const id = parseProductId(req.params.id);
+    if (id === null) {
       return res.status(400).json({
         status: 'error',
         message: 'ID produk harus berupa angka'
@@ -68,29 +117,16 @@ app.get('/products/:id', async (req, res) => {
 // 3. POST /products: Membuat data baru
 app.post('/products', async (req, res) => {
   try {
-    const { name, price } = req.body;
-
-    // Validasi input
-    if (!name || price === undefined || price === null || price === '') {
+    const validation = validateProductInput(req.body);
+    if (validation.error) {
       return res.status(400).json({
         status: 'error',
-        message: 'Nama dan harga produk harus diisi'
-      });
-    }
-
-    const parsedPrice = Number(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Harga produk harus berupa angka valid dan minimal 0'
+        message: validation.error
       });
     }
 
     const newProduct = await prisma.product.create({
-      data: {
-        name: String(name).trim(),
-        price: parsedPrice
-      }
+      data: validation.data
     });
 
     res.status(201).json({
@@ -110,37 +146,28 @@ app.post('/products', async (req, res) => {
 // Handler untuk PUT (update data)
 async function handleUpdateProduct(req, res) {
   try {
-    const rawId = req.body.id || req.params.id;
+    const rawId = req.params.id || (req.body && req.body.id);
 
-    if (!rawId) {
+    if (rawId === undefined || rawId === null || rawId === '') {
       return res.status(400).json({
         status: 'error',
         message: 'ID produk harus disertakan (pada body atau URL parameter)'
       });
     }
 
-    const id = parseInt(rawId);
-    if (isNaN(id)) {
+    const id = parseProductId(rawId);
+    if (id === null) {
       return res.status(400).json({
         status: 'error',
         message: 'ID produk harus berupa angka yang valid'
       });
     }
 
-    const { name, price } = req.body;
-
-    if (!name || price === undefined || price === null || price === '') {
+    const validation = validateProductInput(req.body);
+    if (validation.error) {
       return res.status(400).json({
         status: 'error',
-        message: 'Nama dan harga produk harus diisi'
-      });
-    }
-
-    const parsedPrice = Number(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Harga produk harus berupa angka valid dan minimal 0'
+        message: validation.error
       });
     }
 
@@ -158,10 +185,7 @@ async function handleUpdateProduct(req, res) {
 
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: {
-        name: String(name).trim(),
-        price: parsedPrice
-      }
+      data: validation.data
     });
 
     res.json({
@@ -186,17 +210,17 @@ app.put('/products/:id', handleUpdateProduct);
 // Handler untuk DELETE (hapus data)
 async function handleDeleteProduct(req, res) {
   try {
-    const rawId = req.params.id || req.body.id;
+    const rawId = req.params.id || (req.body && req.body.id);
 
-    if (!rawId) {
+    if (rawId === undefined || rawId === null || rawId === '') {
       return res.status(400).json({
         status: 'error',
         message: 'ID produk harus disertakan'
       });
     }
 
-    const id = parseInt(rawId);
-    if (isNaN(id)) {
+    const id = parseProductId(rawId);
+    if (id === null) {
       return res.status(400).json({
         status: 'error',
         message: 'ID produk harus berupa angka yang valid'

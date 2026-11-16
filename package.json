@@ -1,0 +1,14 @@
+{
+  "name": "Week_9",
+  "dependencies": {
+    "express": "^5.3.0"
+  },
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "postinstall": "prisma skills sync || exit 0"
+  },
+  "devDependencies": {
+    "prisma": "8.0.0-rc.30"
+  }
+}

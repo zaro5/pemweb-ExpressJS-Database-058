@@ -4,13 +4,17 @@
   "description": "Express.js REST API with Prisma ORM",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "cors": "^2.8.6",
     "express": "^5.3.0"
   },
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
     "prisma:studio": "prisma studio",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:test": "npm --prefix frontend test"
   },
   "devDependencies": {
     "prisma": "^6.19.3"

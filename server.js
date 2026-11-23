@@ -1,10 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = 3000;
 
+app.use(cors());
 app.use(express.json());
 
 function parseProductId(value) {
@@ -58,7 +60,7 @@ function validateProductInput(body = {}) {
 }
 
 // 1. GET /products: Menampilkan seluruh data
-app.get('/products', async (req, res) => {
+app.get(['/products', '/api/products'], async (req, res) => {
   try {
     const products = await prisma.product.findMany({
       orderBy: { id: 'asc' }
@@ -79,7 +81,7 @@ app.get('/products', async (req, res) => {
 });
 
 // 2. GET /products/:id: Menampilkan data produk berdasarkan ID
-app.get('/products/:id', async (req, res) => {
+app.get(['/products/:id', '/api/products/:id'], async (req, res) => {
   try {
     const id = parseProductId(req.params.id);
     if (id === null) {
@@ -115,7 +117,7 @@ app.get('/products/:id', async (req, res) => {
 });
 
 // 3. POST /products: Membuat data baru
-app.post('/products', async (req, res) => {
+app.post(['/products', '/api/products'], async (req, res) => {
   try {
     const validation = validateProductInput(req.body);
     if (validation.error) {
@@ -204,8 +206,8 @@ async function handleUpdateProduct(req, res) {
 
 // 4. PUT: Mengupdate data yang sudah ada
 // Mendukung PUT /products (dengan id di body) maupun PUT /products/:id (dengan id di URL/body)
-app.put('/products', handleUpdateProduct);
-app.put('/products/:id', handleUpdateProduct);
+app.put(['/products', '/api/products'], handleUpdateProduct);
+app.put(['/products/:id', '/api/products/:id'], handleUpdateProduct);
 
 // Handler untuk DELETE (hapus data)
 async function handleDeleteProduct(req, res) {
@@ -257,8 +259,8 @@ async function handleDeleteProduct(req, res) {
 }
 
 // 5. DELETE: Menghapus data yang sudah ada (berdasarkan id)
-app.delete('/products/:id', handleDeleteProduct);
-app.delete('/products', handleDeleteProduct);
+app.delete(['/products/:id', '/api/products/:id'], handleDeleteProduct);
+app.delete(['/products', '/api/products'], handleDeleteProduct);
 
 // Jalankan Server
 const server = app.listen(PORT, () => {
